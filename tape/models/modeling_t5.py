@@ -72,6 +72,7 @@ class T5Config(ProteinConfig):
         self.layer_norm_eps = layer_norm_eps
 
         # Adapt comparable argument names from BertConfig for consistency
+        self.hidden_size = hidden_size
         self.dropout_rate = dropout_prob
         self.d_ff = intermediate_size
         self.d_model = hidden_size
