@@ -44,7 +44,7 @@ class ProteinT5Embeddings(nn.Module):
         # self.LayerNorm is not snake-cased to stick with TensorFlow model variable name and be
         # able to load any TensorFlow checkpoint file
         self.LayerNorm = LayerNorm(config.d_model, eps=config.layer_norm_eps)
-        self.dropout = nn.Dropout(config.dropout_prob)
+        self.dropout = nn.Dropout(config.dropout_rate)
 
     def forward(self, input_ids):
         embeddings = self.word_embeddings(input_ids)
@@ -72,6 +72,7 @@ class T5Config(ProteinConfig):
         self.layer_norm_eps = layer_norm_eps
 
         # Adapt comparable argument names from BertConfig for consistency
+        self.hidden_size = hidden_size
         self.dropout_rate = dropout_prob
         self.d_ff = intermediate_size
         self.d_model = hidden_size
