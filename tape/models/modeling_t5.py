@@ -121,8 +121,8 @@ class T5Model(T5AbstractModel):
                           attention_mask=input_mask)
 
 
-@registry.register_task_model('masked_recon_modeling', 't5enc')
-class T5ForMaskedRecon(MLMHead, T5AbstractModel):
+@registry.register_task_model('masked_language_modeling', 't5enc')
+class T5ForMLM(MLMHead, T5AbstractModel):
 
     def __init__(self, config):
         super().__init__(config)
