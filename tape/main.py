@@ -15,6 +15,7 @@ except ImportError:
 from .registry import registry
 from . import training
 from . import utils
+from . import load_models
 
 CallbackList = typing.Sequence[typing.Callable]
 OutputDict = typing.Dict[str, typing.List[typing.Any]]
@@ -187,7 +188,7 @@ def run_train(args: typing.Optional[argparse.Namespace] = None, env=None) -> Non
     if missing:
         raise RuntimeError(f"Missing arguments: {missing}")
     train_args = {name: arg_dict[name] for name in arg_names}
-
+    load_models()
     training.run_train(**train_args)
 
 
@@ -209,7 +210,7 @@ def run_eval(args: typing.Optional[argparse.Namespace] = None) -> typing.Dict[st
     if missing:
         raise RuntimeError(f"Missing arguments: {missing}")
     eval_args = {name: arg_dict[name] for name in arg_names}
-
+    load_models()
     return training.run_eval(**eval_args)
 
 
@@ -230,7 +231,7 @@ def run_embed(args: typing.Optional[argparse.Namespace] = None) -> None:
     if missing:
         raise RuntimeError(f"Missing arguments: {missing}")
     embed_args = {name: arg_dict[name] for name in arg_names}
-
+    load_models()
     training.run_embed(**embed_args)
 
 
