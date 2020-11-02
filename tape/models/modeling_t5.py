@@ -70,6 +70,8 @@ class T5Config(ProteinConfig, HFT5Config):
                  gradient_checkpointing: bool = False,
                  **kwargs):
         super().__init__(**kwargs)
+        HFT5Config.__init__(**kwargs)
+
         self.vocab_size = vocab_size
         self.layer_norm_eps = layer_norm_eps
 
