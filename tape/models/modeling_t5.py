@@ -61,20 +61,27 @@ class ProteinT5Embeddings(nn.Module):
         return embeddings
 
 
-class T5Config(ProteinConfig, HFT5Config):
+class T5Config(ProteinConfig):
     pretrained_config_archive_map = T5_PRETRAINED_CONFIG_ARCHIVE_MAP
 
     def __init__(self,
+                 vocab_size: int = 30,
                  hidden_size: int = 768,
                  num_hidden_layers: int = 12,
                  num_attention_heads: int = 12,
+                 intermediate_size: int = 3072,
+                 dropout_prob: float = 0.1,
                  max_position_embeddings: int = 8096,
+                 layer_norm_eps: float = 1e-12,
                  gradient_checkpointing: bool = False,
                  **kwargs):
         super().__init__(**kwargs)
-        T5Config.__init__(self, **kwargs)
+        self.vocab_size = vocab_size
+        self.layer_norm_eps = layer_norm_eps
 
         # Adapt comparable argument names from BertConfig for consistency
+        self.dropout_rate = dropout_prob
+        self.d_ff = intermediate_size
         self.d_model = hidden_size
         self.num_layers = num_hidden_layers
         self.num_heads = num_attention_heads
