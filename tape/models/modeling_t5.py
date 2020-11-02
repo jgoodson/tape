@@ -26,6 +26,8 @@ from ..registry import registry
 from .modeling_utils import ProteinConfig, ProteinModel, MLMHead
 from .modeling_utils import T5Stack
 
+from transformers.modeling_t5 import T5Config as HFT5Config
+
 logger = logging.getLogger(__name__)
 
 URL_PREFIX = "https://storage.googleapis.com/fire-tod.tryps.in/pytorch-models/"
@@ -53,7 +55,7 @@ class ProteinT5Embeddings(nn.Module):
         return embeddings
 
 
-class T5Config(ProteinConfig):
+class T5Config(ProteinConfig, HFT5Config):
     pretrained_config_archive_map = T5_PRETRAINED_CONFIG_ARCHIVE_MAP
 
     def __init__(self,
