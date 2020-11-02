@@ -39,12 +39,12 @@ class ProteinT5Embeddings(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.word_embeddings = nn.Embedding(
-            config.vocab_size, config.hidden_size, padding_idx=0)
+            config.vocab_size, config.d_model, padding_idx=0)
 
         # self.LayerNorm is not snake-cased to stick with TensorFlow model variable name and be
         # able to load any TensorFlow checkpoint file
-        self.LayerNorm = LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
-        self.dropout = nn.Dropout(config.hidden_dropout_prob)
+        self.LayerNorm = LayerNorm(config.d_model, eps=config.layer_norm_eps)
+        self.dropout = nn.Dropout(config.dropout_prob)
 
     def forward(self, input_ids):
         embeddings = self.word_embeddings(input_ids)
