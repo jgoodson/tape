@@ -20,7 +20,6 @@ import logging
 
 import torch
 from torch import nn
-from transformers.modeling_t5 import T5Config as HFT5Config
 from tape.models.modeling_utils import LayerNorm
 
 from ..registry import registry
@@ -122,7 +121,7 @@ class T5Model(T5AbstractModel):
 
 
 @registry.register_task_model('masked_language_modeling', 't5enc')
-class T5ForMLM(MLMHead, T5AbstractModel):
+class T5ForMLM(T5AbstractModel):
 
     def __init__(self, config):
         super().__init__(config)
