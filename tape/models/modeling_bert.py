@@ -108,6 +108,7 @@ class ProteinBertConfig(ProteinConfig):
         self.type_vocab_size = type_vocab_size
         self.initializer_range = initializer_range
         self.layer_norm_eps = layer_norm_eps
+        self.checkpoint = True
 
 
 class ProteinBertEmbeddings(nn.Module):
@@ -296,6 +297,7 @@ class ProteinBertEncoder(nn.Module):
         super().__init__()
         self.output_attentions = config.output_attentions
         self.output_hidden_states = config.output_hidden_states
+        self.checkpoint = config.checkpoint
         self.layer = nn.ModuleList(
             [ProteinBertLayer(config) for _ in range(config.num_hidden_layers)])
 
@@ -344,7 +346,10 @@ class ProteinBertEncoder(nn.Module):
                 if self.output_hidden_states:
                     all_hidden_states = all_hidden_states + (hidden_states,)
 
-                layer_outputs = layer_module(hidden_states, attention_mask)
+                if self.checkpoint:
+                    layer_outputs = checkpoint(layer_module, hidden_states, attention_mask)
+                else:
+                    layer_outputs = layer_module(hidden_states, attention_mask)
                 hidden_states = layer_outputs[0]
 
                 if self.output_attentions:
@@ -543,15 +548,16 @@ class ProteinBertForMultiLabelClassification(ProteinBertAbstractModel):
         self.bert = ProteinBertModel(config)
         self.classify = MultiLabelClassificationHead(
             config.hidden_size, config.num_labels)
-
+        self.pos_weights = config.pos_weights
         self.init_weights()
 
     def forward(self, input_ids, input_mask=None, targets=None):
-        outputs = self.bert(input_ids, input_mask=input_mask)
+        with torch.no_grad():
+            outputs = self.bert(input_ids, input_mask=input_mask)
 
         sequence_output, pooled_output = outputs[:2]
 
-        outputs = self.classify(pooled_output, targets) + outputs[2:]
+        outputs = self.classify(sequence_output, targets, self.pos_weights) + outputs[2:]
         # (loss), prediction_scores, (hidden_states), (attentions)
         return outputs
 

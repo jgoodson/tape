@@ -14,6 +14,7 @@ from scipy.spatial.distance import pdist, squareform
 
 from .tokenizers import TAPETokenizer
 from .registry import registry
+from .extras import pos_weights
 
 logger = logging.getLogger(__name__)
 
@@ -561,7 +562,7 @@ class RemoteHomologyDataset(Dataset):
                 'targets': fold_label}
 
 
-@registry.register_task('protein_domain', num_labels=18259)
+@registry.register_task('protein_domain', num_labels=14808, pos_weights=pos_weights)
 class ProteinDomainDataset(Dataset):
     def __init__(self,
                  data_path: Union[str, Path],
@@ -592,7 +593,7 @@ class ProteinDomainDataset(Dataset):
     def collate_fn(self, batch: List[Tuple[Any, ...]]) -> Dict[str, torch.Tensor]:
         input_ids, input_mask, family_label = tuple(zip(*batch))
 
-        family_label_multihot = np.zeros((len(family_label), 18259))
+        family_label_multihot = np.zeros((len(family_label), 14808))
         for idx, label in enumerate(family_label):
             for elem in label:
                 family_label_multihot[idx][elem] = 1

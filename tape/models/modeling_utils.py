@@ -64,9 +64,11 @@ class ProteinConfig(object):
     def __init__(self, **kwargs):
         self.finetuning_task = kwargs.pop('finetuning_task', None)
         self.num_labels = kwargs.pop('num_labels', 2)
+        self.pos_weights = kwargs.pop('pos_weights', None)
         self.output_attentions = kwargs.pop('output_attentions', False)
         self.output_hidden_states = kwargs.pop('output_hidden_states', False)
         self.torchscript = kwargs.pop('torchscript', False)
+        self.checkpoint = kwargs.pop('checkpoint', False)
 
     def save_pretrained(self, save_directory):
         """ Save a configuration object to the directory `save_directory`, so that it
@@ -863,14 +865,17 @@ class SequenceClassificationHead(nn.Module):
 class MultiLabelClassificationHead(nn.Module):
     def __init__(self, hidden_size: int, num_labels: int):
         super().__init__()
-        self.classify = SimpleMLP(hidden_size, 512, num_labels)
+        self.classify = SimpleConv(hidden_size, 512, num_labels)
 
-    def forward(self, pooled_output, targets=None):
-        logits = self.classify(pooled_output)
+    def forward(self, sequence_output, targets=None, pos_weights=None):
+        logits = self.classify(sequence_output).max(1)[0]
         outputs = (logits,)
 
         if targets is not None:
-            loss_fct = nn.BCEWithLogitsLoss()
+            if pos_weights:
+                loss_fct = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(pos_weights, device=logits.device))
+            else:
+                loss_fct = nn.BCEWithLogitsLoss()
             classification_loss = loss_fct(logits, targets)
 
             # Roughly calculate best thresholds per-sequence based on F1-score
@@ -883,6 +888,7 @@ class MultiLabelClassificationHead(nn.Module):
                 'precision': precision,
                 'recall': recall,
                 'accuracy': accuracy,
+                'mean_prob': torch.sigmoid(logits).mean(),
             }
             loss_and_metrics = (classification_loss, metrics)
             outputs = (loss_and_metrics,) + outputs

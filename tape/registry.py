@@ -1,4 +1,4 @@
-from typing import Dict, Type, Callable, Optional, Union
+from typing import Dict, Type, Callable, Optional, Union, List
 from torch.utils.data import Dataset
 from .models.modeling_utils import ProteinModel
 from pathlib import Path
@@ -18,17 +18,20 @@ class TAPETaskSpec:
         number of labels used if this is a classification task
     models (Dict[str, ProteinModel]):
         The set of models that can be used for this task. Default: {}.
+    #TODO add pos_weights
     """
 
     def __init__(self,
                  name: str,
                  dataset: Type[Dataset],
                  num_labels: int = -1,
-                 models: Optional[Dict[str, Type[ProteinModel]]] = None):
+                 models: Optional[Dict[str, Type[ProteinModel]]] = None,
+                 pos_weights: Optional[List] = None):
         self.name = name
         self.dataset = dataset
         self.num_labels = num_labels
         self.models = models if models is not None else {}
+        self.pos_weights = pos_weights
 
     def register_model(self, model_name: str, model_cls: Optional[Type[ProteinModel]] = None):
         if model_cls is not None:
@@ -56,7 +59,8 @@ class Registry:
                       task_name: str,
                       num_labels: int = -1,
                       dataset: Optional[Type[Dataset]] = None,
-                      models: Optional[Dict[str, Type[ProteinModel]]] = None):
+                      models: Optional[Dict[str, Type[ProteinModel]]] = None,
+                      pos_weights: Optional[List] = None):
         """ Register a a new TAPE task. This creates a new TAPETaskSpec.
 
         Args:
@@ -103,10 +107,10 @@ class Registry:
         if dataset is not None:
             if models is None:
                 models = {}
-            task_spec = TAPETaskSpec(task_name, dataset, num_labels, models)
+            task_spec = TAPETaskSpec(task_name, dataset, num_labels, models, pos_weights)
             return cls.register_task_spec(task_name, task_spec).dataset
         else:
-            return lambda dataset: cls.register_task(task_name, num_labels, dataset, models)
+            return lambda dataset: cls.register_task(task_name, num_labels, dataset, models, pos_weights)
 
     @classmethod
     def register_task_spec(cls, task_name: str, task_spec: Optional[TAPETaskSpec] = None):
@@ -214,7 +218,9 @@ class Registry:
         model_cls = task_spec.get_model(model_name)
 
         if load_dir is not None:
-            model = model_cls.from_pretrained(load_dir, num_labels=task_spec.num_labels)
+            model = model_cls.from_pretrained(load_dir,
+                                              num_labels=task_spec.num_labels,
+                                              pos_weights=task_spec.pos_weights)
         else:
             config_class = model_cls.config_class
             if config_file is not None:
@@ -222,6 +228,7 @@ class Registry:
             else:
                 config = config_class()
             config.num_labels = task_spec.num_labels
+            config.pos_weights = task_spec.pos_weights
             model = model_cls(config)
         return model
 
